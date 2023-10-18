@@ -51,7 +51,7 @@
   (progn
    (with-stdout-to
     %{target}
-    (run awk -f %{dep:expand_module_aliases_node.awk} %{deps})))))
+    (bash "awk -f %{dep:expand_module_aliases_node.awk} %{deps}")))))
 
 (library
  (modes melange)
