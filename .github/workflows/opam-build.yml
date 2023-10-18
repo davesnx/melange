@@ -23,7 +23,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          # - windows-latest # for some reason windows build is not picking dune 3.5
+          - windows-latest
         ocaml-compiler:
           - 5.1.x
 
