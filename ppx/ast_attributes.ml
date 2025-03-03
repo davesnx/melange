@@ -241,7 +241,7 @@ let iter_process_mel_string_or_int_as (attrs : attributes) =
   List.iter
     ~f:(fun ({ attr_name = { txt; loc }; attr_payload = payload; _ } as attr) ->
       match txt with
-      | "mel.as" | "bs.as" | "as" ->
+      | "mel.as" | "bs.as" ->
           error_if_bs_or_non_namespaced ~loc txt;
           if !st = None then (
             Mel_ast_invariant.mark_used_mel_attribute attr;
@@ -326,7 +326,7 @@ let iter_process_mel_string_as attrs : string option =
   List.iter
     ~f:(fun ({ attr_name = { txt; loc }; attr_payload = payload; _ } as attr) ->
       match txt with
-      | "mel.as" | "bs.as" | "as" ->
+      | "mel.as" | "bs.as" ->
           error_if_bs_or_non_namespaced ~loc txt;
           if !st = None then (
             match Ast_payload.is_single_string payload with
@@ -428,7 +428,7 @@ let iter_process_mel_int_as attrs =
   List.iter
     ~f:(fun ({ attr_name = { txt; loc }; attr_payload = payload; _ } as attr) ->
       match txt with
-      | "mel.as" | "bs.as" | "as" ->
+      | "mel.as" | "bs.as" ->
           error_if_bs_or_non_namespaced ~loc txt;
           if !st = None then (
             match Ast_payload.is_single_int payload with
@@ -466,7 +466,7 @@ let has_inline_payload attrs = List.find_opt ~f:is_inline attrs
 let is_mel_as { attr_name = { txt; loc }; _ } =
   match txt with
   | "mel.as" -> true
-  | "bs.as" | "as" ->
+  | "bs.as" ->
       error_if_bs_or_non_namespaced ~loc txt;
       false
   | _ -> false
