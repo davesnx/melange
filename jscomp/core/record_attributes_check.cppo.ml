@@ -29,7 +29,7 @@ type label = Types.label_description
 let find_mel_as_name =
   let find_mel_as_name (attr : Parsetree.attribute) =
     match attr.attr_name with
-    | { txt = ("mel.as" | "bs.as"); loc = _ } -> (
+    | { txt = "mel.as"; loc = _ } -> (
         match attr.attr_payload with
         | PStr
             [
@@ -66,7 +66,7 @@ let find_name_with_loc (attr : Parsetree.attribute) : string Asttypes.loc option
     =
   match attr with
   | {
-   attr_name = { txt = ("mel.as" | "bs.as") as txt; loc };
+   attr_name = { txt = "mel.as" as txt; loc };
    attr_payload =
      PStr
        [
