@@ -32,6 +32,11 @@ jobs:
         shell: bash
 
     steps:
+      # Cram tests source setup.sh with bash, which rejects CRLF line endings.
+      - name: Keep LF line endings
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
       - name: Checkout code
         uses: actions/checkout@v7
         with:
