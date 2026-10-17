@@ -21,13 +21,22 @@ jobs:
           - macos-latest
           - ubuntu-latest
           - ubuntu-26.04-arm
-          # - windows-latest # for some reason windows build is not picking dune 3.5
+          - windows-latest
         ocaml-compiler:
           - ocaml-variants.5.6.0+trunk
 
     runs-on: ${{ matrix.os }}
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
+      # Cram tests source setup.sh with bash, which rejects CRLF line endings.
+      - name: Keep LF line endings
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
       - name: Checkout code
         uses: actions/checkout@v7
         with:
@@ -70,9 +79,16 @@ jobs:
 
       - name: Install dependencies
         working-directory: melange
+        env:
+          # Build in the checkout: the opam build dir pushes dune sandbox paths
+          # past the Windows 260-character limit.
+          OPAMINPLACEBUILD: ${{ runner.os == 'Windows' }}
         run: |
           rm -rf ~/.opam/repo/default ~/.opam/repo/default.tar.gz
           opam update
+          # The js_of_ocaml patch below needs Hint_physical_comparison, removed
+          # from the 5.6 branch in ocaml/ocaml@248b5f2.
+          opam pin add ocaml-variants.5.6.0+trunk git+https://github.com/ocaml/ocaml.git#bd3565774c9089f51e60fb50550ebe7b7d266026 -y
           # Match dune_3 in flake.lock; Git metadata is required by dune subst.
           opam pin add dune.3.25.0~alpha0 git+https://github.com/anmonteiro/dune.git#d244859fa04e4b0156b36cb0cea1995fd051a43d -y --no-action
           opam pin add dune-build-info.3.25.0~alpha0 git+https://github.com/anmonteiro/dune.git#d244859fa04e4b0156b36cb0cea1995fd051a43d -y --no-action
