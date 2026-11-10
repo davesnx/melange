@@ -361,7 +361,7 @@ let format_pp_token state size = function
     begin match Stack.top_opt state.pp_tbox_stack with
     | None -> () (* No open tabulation box. *)
     | Some (Pp_tbox tabs) ->
-      let rec add_tab n = function
+      let rec add_tab (n : int) = function
         | [] -> [n]
         | x :: l as ls -> if n < x then n :: ls else x :: add_tab n l in
       tabs := add_tab (state.pp_margin - state.pp_space_left) !tabs
@@ -1081,60 +1081,18 @@ let std_formatter = formatter_of_out_channel Stdlib.stdout
 and err_formatter = formatter_of_out_channel Stdlib.stderr
 and str_formatter = formatter_of_buffer stdbuf
 
-(* Initialise domain local state *)
-module DLS = Domain.DLS
+module DLS = struct
+  let[@inline] get x = x
+end
 
-let stdbuf_key = DLS.new_key pp_make_buffer
-let _ = DLS.set stdbuf_key stdbuf
+let stdbuf_key = stdbuf
+let str_formatter_key = str_formatter
+let std_formatter_key = std_formatter
+let err_formatter_key = err_formatter
 
-let str_formatter_key = DLS.new_key (fun () ->
-  formatter_of_buffer (DLS.get stdbuf_key))
-let _ = DLS.set str_formatter_key str_formatter
-
-let buffered_out_string key str ofs len =
-  Buffer.add_substring (Domain.DLS.get key) str ofs len
-
-let buffered_out_flush oc key () =
-  let buf = Domain.DLS.get key in
-  let len = Buffer.length buf in
-  let str = Buffer.contents buf in
-  output_substring oc str 0 len ;
-  Stdlib.flush oc;
-  Buffer.clear buf
-
-let std_buf_key = Domain.DLS.new_key (fun () -> Buffer.create pp_buffer_size)
-let err_buf_key = Domain.DLS.new_key (fun () -> Buffer.create pp_buffer_size)
-
-(* Flush formatter, ignore [Sys_error _] if it was flushed previously, for use
-   at program exit and domain destruction. This is the same logic as in
-   [stdlib.ml] for out channels. *)
 let pp_print_flush_ignore_sys_error ppf () =
   try pp_print_flush ppf ()
   with Sys_error _ -> ()
-
-let std_formatter_key = DLS.new_key (fun () ->
-  let ppf =
-    pp_make_formatter (buffered_out_string std_buf_key)
-      (buffered_out_flush Stdlib.stdout std_buf_key) ignore ignore ignore
-  in
-  ppf.pp_out_newline <- display_newline ppf;
-  ppf.pp_out_spaces <- display_blanks ppf;
-  ppf.pp_out_indent <- display_indent ppf;
-  Domain.at_exit (pp_print_flush ppf);
-  ppf)
-let _ = DLS.set std_formatter_key std_formatter
-
-let err_formatter_key = DLS.new_key (fun () ->
-  let ppf =
-    pp_make_formatter (buffered_out_string err_buf_key)
-      (buffered_out_flush Stdlib.stderr err_buf_key) ignore ignore ignore
-  in
-  ppf.pp_out_newline <- display_newline ppf;
-  ppf.pp_out_spaces <- display_blanks ppf;
-  ppf.pp_out_indent <- display_indent ppf;
-  Domain.at_exit (pp_print_flush_ignore_sys_error ppf);
-  ppf)
-let _ = DLS.set err_formatter_key err_formatter
 
 let get_std_formatter () = DLS.get std_formatter_key
 let get_err_formatter () = DLS.get err_formatter_key
@@ -1158,7 +1116,7 @@ let flush_str_formatter () =
   flush_buffer_formatter stdbuf str_formatter
 
 let make_synchronized_formatter output flush =
-  DLS.new_key (fun () ->
+  Domain.DLS.new_key (fun () ->
     let buf = Buffer.create pp_buffer_size in
     let output' = Buffer.add_substring buf in
     let flush' () =
@@ -1621,16 +1579,3 @@ let flush_standard_formatters () =
   pp_print_flush_ignore_sys_error (DLS.get err_formatter_key) ()
 
 let () = at_exit flush_standard_formatters
-
-let () = Domain.before_first_spawn (fun () ->
-  flush_standard_formatters ();
-  let fs = pp_get_formatter_out_functions std_formatter () in
-  pp_set_formatter_out_functions std_formatter
-    {fs with out_string = buffered_out_string std_buf_key;
-             out_flush = buffered_out_flush Stdlib.stdout std_buf_key};
-
-  let fs = pp_get_formatter_out_functions err_formatter () in
-  pp_set_formatter_out_functions err_formatter
-    {fs with out_string = buffered_out_string err_buf_key;
-             out_flush = buffered_out_flush Stdlib.stderr err_buf_key};
-)

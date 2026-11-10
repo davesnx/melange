@@ -667,7 +667,7 @@ let at_exit f =
   let f_yet_to_run = ref true in
   let old_exit = !exit_function in
   let new_exit () =
-    if not !f_yet_to_run then begin
+    if !f_yet_to_run then begin
       f_yet_to_run := false;
       f()
     end;

@@ -33,8 +33,7 @@ and 'a status =
 let atomic_lock = Mutex.create ()
 let atomically : type a . (unit -> a) -> a =
   fun f ->
-    Mutex.lock atomic_lock;
-    Fun.protect ~finally:(fun () -> Mutex.unlock atomic_lock) f
+    Mutex.protect atomic_lock f
 
 let first_spawn_queue : (unit -> unit) Queue.t = Queue.create ()
 let first_spawn_occurred = ref false
