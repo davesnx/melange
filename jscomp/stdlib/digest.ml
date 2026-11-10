@@ -40,6 +40,12 @@ let string_of_hex s =
 
 (* Generic interface *)
 
+let with_open_bin filename f =
+  let ic = open_in_bin filename in
+  match f ic with
+  | v -> close_in_noerr ic; v
+  | exception e -> close_in_noerr ic; raise e
+
 module type S = sig
   type t = string
   val hash_length : int
@@ -105,7 +111,7 @@ module BLAKE2 (X: sig val hash_length : int end) : S = struct
     let ctx = create () in
     if toread < 0 then begin
       let rec do_read () =
-        let n = In_channel.input ic buf 0 buf_size in
+        let n = input ic buf 0 buf_size in
         if n = 0
         then final ctx hash_length
         else (update ctx buf 0 n; do_read ())
@@ -113,7 +119,7 @@ module BLAKE2 (X: sig val hash_length : int end) : S = struct
     end else begin
       let rec do_read toread =
         if toread = 0 then final ctx hash_length else begin
-          let n = In_channel.input ic buf 0 (Int.min buf_size toread) in
+          let n = input ic buf 0 (Int.min buf_size toread) in
           if n = 0
           then raise End_of_file
           else begin
@@ -125,7 +131,7 @@ module BLAKE2 (X: sig val hash_length : int end) : S = struct
     end
 
   let file filename =
-    In_channel.with_open_bin filename (fun ic -> channel ic (-1))
+    with_open_bin filename (fun ic -> channel ic (-1))
 
   let output chan digest = output_string chan digest
 
@@ -177,7 +183,7 @@ module MD5 = struct
     else unsafe_bytes b ofs len
 
   let file filename =
-    In_channel.with_open_bin filename (fun ic -> channel ic (-1))
+    with_open_bin filename (fun ic -> channel ic (-1))
 
   let output chan digest = output_string chan digest
 

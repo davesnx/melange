@@ -404,24 +404,22 @@ exception Scan_failure of string
 
 let bad_input s = raise (Scan_failure s)
 
+let caml_char c = "'" ^ Char.escaped c ^ "'"
+
 let bad_input_escape c =
-  bad_input (Printf.sprintf "illegal escape character %C" c)
+  bad_input ("illegal escape character " ^ caml_char c)
 
 
 let bad_token_length message =
   bad_input
-    (Printf.sprintf
-       "scanning of %s failed: \
-        the specified length was too short for token"
-       message)
+    ("scanning of " ^ message ^
+     " failed: the specified length was too short for token")
 
 
 let bad_end_of_input message =
   bad_input
-    (Printf.sprintf
-       "scanning of %s failed: \
-        premature end of file occurred before end of token"
-       message)
+    ("scanning of " ^ message ^
+     " failed: premature end of file occurred before end of token")
 
 
 let bad_float () =
@@ -433,7 +431,7 @@ let bad_hex_float () =
 
 
 let character_mismatch_err c ci =
-  Printf.sprintf "looking for %C, found %C" c ci
+  "looking for " ^ caml_char c ^ ", found " ^ caml_char ci
 
 
 let character_mismatch c ci =
@@ -493,7 +491,7 @@ let token_bool ib =
   match Scanning.token ib with
   | "true" -> true
   | "false" -> false
-  | s -> bad_input (Printf.sprintf "invalid boolean '%s'" s)
+  | s -> bad_input ("invalid boolean '" ^ s ^ "'")
 
 
 (* The type of integer conversions. *)
@@ -593,7 +591,7 @@ let scan_decimal_digit_plus width ib =
     let width = Scanning.store_char width ib c in
     scan_decimal_digit_star width ib
   | c ->
-    bad_input (Printf.sprintf "character %C is not a decimal digit" c)
+    bad_input ("character " ^ caml_char c ^ " is not a decimal digit")
 
 
 (* To scan numbers from other bases, we use a predicate argument to
@@ -623,7 +621,7 @@ let scan_digit_plus basis digitp width ib =
     let width = Scanning.store_char width ib c in
     scan_digit_star digitp width ib
   else
-    bad_input (Printf.sprintf "character %C is not a valid %s digit" c basis)
+    bad_input ("character " ^ caml_char c ^ " is not a valid " ^ basis ^ " digit")
 
 
 let is_binary_digit = function
@@ -958,8 +956,8 @@ let char_for_decimal_code c0 c1 c2 =
           decimal_value_of_char c2 in
   if c < 0 || c > 255 then
     bad_input
-      (Printf.sprintf
-         "bad character decimal encoding \\%c%c%c" c0 c1 c2) else
+      ("bad character decimal encoding \\" ^ String.make 1 c0 ^
+       String.make 1 c1 ^ String.make 1 c2) else
   char_of_int c
 
 
@@ -985,7 +983,8 @@ let char_for_hexadecimal_code c1 c2 =
          hexadecimal_value_of_char c2 in
   if c < 0 || c > 255 then
     bad_input
-      (Printf.sprintf "bad character hexadecimal encoding \\%c%c" c1 c2) else
+      ("bad character hexadecimal encoding \\" ^ String.make 1 c1 ^
+       String.make 1 c2) else
   char_of_int c
 
 
@@ -1093,7 +1092,7 @@ let scan_bool ib =
     | 'f' -> 5
     | c ->
       bad_input
-        (Printf.sprintf "the character %C cannot start a boolean" c) in
+        ("the character " ^ caml_char c ^ " cannot start a boolean") in
   scan_string None m ib
 
 
@@ -1122,7 +1121,7 @@ let scan_chars_in_char_set char_set scan_indic width ib =
 let scanf_bad_input ib = function
   | Scan_failure s | Failure s ->
     let i = Scanning.char_count ib in
-    bad_input (Printf.sprintf "scanf: bad input at char number %i: %s" i s)
+    bad_input ("scanf: bad input at char number " ^ string_of_int i ^ ": " ^ s)
   | x -> raise x
 
 

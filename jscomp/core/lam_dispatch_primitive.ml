@@ -226,7 +226,8 @@ let translate loc (prim_name : string) (args : J.expression list) : J.expression
       call Js_runtime_modules.bytes
   | "caml_backtrace_status" | "caml_get_exception_backtrace"
   | "caml_get_exception_raw_backtrace" | "caml_record_backtrace"
-  | "caml_convert_raw_backtrace" | "caml_get_current_callstack" ->
+  | "caml_convert_raw_backtrace" | "caml_get_current_callstack"
+  | "caml_restore_raw_backtrace" ->
       E.unit
   (* unit -> unit
      _ -> unit
