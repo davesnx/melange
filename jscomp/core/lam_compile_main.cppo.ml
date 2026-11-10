@@ -198,6 +198,7 @@ let compile ~package_info (output_prefix: string) (lam: Lambda.lambda) =
 #endif
   in
 
+  let lam = Lam_split_deep_const.program lam in
   let (coerced_input, meta) =
     Lam_coercion.coerce_and_group_big_lambda  meta lam
   in

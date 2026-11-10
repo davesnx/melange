@@ -68,10 +68,11 @@ let generate_case ?arity ~args_number args_array args =
            Printf.sprintf "apply%d (Obj.magic o) %s" arity
              (String.concat ~sep:" " args)
          else
-           Printf.sprintf "app (apply%d (Obj.magic o) %s) [|%s|]" arity
+           Printf.sprintf "_%d (apply%d (Obj.magic o) %s) %s"
+             (args_number - arity) arity
              (String.concat ~sep:" "
                 (Array.to_list (Array.sub args_array ~pos:0 ~len:arity)))
-             (String.concat ~sep:";"
+             (String.concat ~sep:" "
                 (Array.to_list
                    (Array.sub args_array ~pos:arity ~len:(args_number - arity)))))
 
@@ -88,6 +89,9 @@ let generate_apply arity =
     "(* Internal use *)\nexternal apply%d : (%s) -> %s = \"#apply%d\"" arity ty
     ty arity
 
+(* curry_N is not %private: Js_pass_tailcall_inline inlines a private function
+   used once into _N (it ignores [@inline never]), and the closures of the slow
+   path then make every _N call allocate a context. *)
 let generate_fun args_number =
   let args_array =
     Array.init args_number ~f:(fun i -> Printf.sprintf "a%d" i)
@@ -98,7 +102,7 @@ let generate_fun args_number =
   Printf.sprintf
     {|
 
-let %%private curry_%d o %s arity =
+let curry_%d o %s arity =
   match arity with
   |%s
 
