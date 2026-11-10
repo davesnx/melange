@@ -273,7 +273,7 @@ let simplify_alias =
     in
     hit ~under_function:false lam
   in
-  let rec simpl (meta : Lam_stats.t) (lam : Lam.t) : Lam.t =
+  let rec simpl_node (meta : Lam_stats.t) (lam : Lam.t) : Lam.t =
     match lam with
     | Lvar _ | Lmutvar _ -> lam
     | Lprim { primitive = Pfield (i, info) as primitive; args = [ arg ]; loc }
@@ -620,5 +620,9 @@ let simplify_alias =
           (List.map ~f:(simpl meta) ll)
           ~loc
     | Lifused (v, l) -> Lam.ifused v (simpl meta l)
+  and simpl (meta : Lam_stats.t) (lam : Lam.t) : Lam.t =
+    match Lam_printf_lower.lower meta.ident_tbl lam with
+    | Some lam -> simpl meta lam
+    | None -> simpl_node meta lam
   in
   fun meta lam -> simpl meta lam

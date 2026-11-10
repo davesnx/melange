@@ -633,3 +633,83 @@ let caml_nativeint_format = caml_format_int
 let caml_int32_format = caml_format_int
 let caml_int32_of_string = caml_int_of_string
 let caml_nativeint_of_string = caml_int32_of_string
+
+let caml_printf_pad padty width str =
+  let len = Caml_string_extern.length str in
+  let w = if width >= 0 then width else -width in
+  if w <= len then str
+  else
+    let fill c = Caml_string_extern.repeat c (w - len) in
+    let c0 = Caml_string_extern.unsafe_get str 0 in
+    if width < 0 || padty = 0 then str ^ fill " "
+    else if padty = 1 then fill " " ^ str
+    else if len > 0 && (c0 = '+' || c0 = '-' || c0 = ' ') then
+      Caml_string_extern.get_string_unsafe str 0
+      ^ fill "0"
+      ^ Caml_string_extern.slice_rest str 1
+    else if
+      len > 1 && c0 = '0'
+      &&
+      let c1 = Caml_string_extern.unsafe_get str 1 in
+      c1 = 'x' || c1 = 'X'
+    then
+      Caml_string_extern.slice str 0 2
+      ^ fill "0"
+      ^ Caml_string_extern.slice_rest str 2
+    else fill "0" ^ str
+
+let caml_printf_iprec prec str =
+  let prec = if prec >= 0 then prec else -prec in
+  let len = Caml_string_extern.length str in
+  let c = Caml_string_extern.unsafe_get str 0 in
+  if (c = '+' || c = '-' || c = ' ') && prec + 1 > len then
+    Caml_string_extern.get_string_unsafe str 0
+    ^ Caml_string_extern.repeat "0" (prec + 1 - len)
+    ^ Caml_string_extern.slice_rest str 1
+  else if
+    c = '0'
+    && prec + 2 > len
+    && len > 1
+    &&
+    let c1 = Caml_string_extern.unsafe_get str 1 in
+    c1 = 'x' || c1 = 'X'
+  then
+    Caml_string_extern.slice str 0 2
+    ^ Caml_string_extern.repeat "0" (prec + 2 - len)
+    ^ Caml_string_extern.slice_rest str 2
+  else if
+    ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+    && prec > len
+  then Caml_string_extern.repeat "0" (prec - len) ^ str
+  else str
+
+let caml_printf_float prefix prec kind x =
+  let prec = if prec >= 0 then prec else -prec in
+  caml_format_float
+    (prefix ^ "." ^ Caml_nativeint_extern.to_string prec ^ kind)
+    x
+
+let caml_printf_escape c =
+  if c = '\\' then "\\\\"
+  else if c = '\n' then "\\n"
+  else if c = '\t' then "\\t"
+  else if c = '\r' then "\\r"
+  else if c = '\b' then "\\b"
+  else if c >= ' ' && c <= '~' then Caml_string_extern.of_char c
+  else
+    let n = Caml_char.code c in
+    "\\"
+    ^ Caml_string_extern.of_char (Caml_char.unsafe_chr (48 + (n / 100)))
+    ^ Caml_string_extern.of_char (Caml_char.unsafe_chr (48 + (n / 10 mod 10)))
+    ^ Caml_string_extern.of_char (Caml_char.unsafe_chr (48 + (n mod 10)))
+
+let caml_printf_caml_string s =
+  let r = ref "\"" in
+  for i = 0 to Caml_string_extern.length s - 1 do
+    let c = Caml_string_extern.unsafe_get s i in
+    r.contents <- (r.contents ^ if c = '"' then "\\\"" else caml_printf_escape c)
+  done;
+  r.contents ^ "\""
+
+let caml_printf_caml_char c =
+  "'" ^ (if c = '\'' then "\\'" else caml_printf_escape c) ^ "'"

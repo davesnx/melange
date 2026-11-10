@@ -35,3 +35,8 @@ val caml_int_of_string : string -> int
 val caml_int32_of_string : string -> int
 val caml_int64_of_string : string -> int64
 val caml_nativeint_of_string : string -> int
+val caml_printf_pad : int -> int -> string -> string
+val caml_printf_iprec : int -> string -> string
+val caml_printf_float : string -> int -> string -> float -> string
+val caml_printf_caml_string : string -> string
+val caml_printf_caml_char : char -> string
