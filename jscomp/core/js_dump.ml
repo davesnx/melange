@@ -508,9 +508,7 @@ and pp_one_case_clause : 'a. _ -> (_ -> 'a -> unit) -> 'a * J.case_clause -> _ =
             let cxt =
               match switch_body with
               | [] -> cxt
-              | _ ->
-                  newline cxt;
-                  statements ~top:false cxt switch_body
+              | _ -> case_body cxt switch_body
             in
             if should_break then (
               newline cxt;
@@ -519,6 +517,23 @@ and pp_one_case_clause : 'a. _ -> (_ -> 'a -> unit) -> 'a * J.case_clause -> _ =
             cxt))
   in
   cxt
+
+(* V8 allocates one context for the whole switch block on entry when any case
+   binding is captured; a block per declaring case keeps it per case. *)
+and case_body cxt (b : J.block) =
+  let rec declares (b : J.block) =
+    List.exists b ~f:(fun (s : J.statement) ->
+        match s.statement_desc with
+        | Variable _ -> true
+        | Block b -> declares b
+        | _ -> false)
+  in
+  if declares b then (
+    space cxt;
+    brace_block cxt b)
+  else (
+    newline cxt;
+    statements ~top:false cxt b)
 
 and loop_case_clauses : 'a. _ -> (_ -> 'a -> unit) -> ('a * _) list -> _ =
  fun cxt pp_cond cases ->
@@ -1220,8 +1235,7 @@ and statement_desc top cxt (s : J.statement_desc) : cxt =
               group cxt 1 (fun () ->
                   string cxt L.default;
                   string cxt L.colon;
-                  newline cxt;
-                  statements ~top:false cxt def))
+                  case_body cxt def))
   | String_switch { expr = e; clauses = cc; default = def } ->
       string cxt L.switch;
       space cxt;
@@ -1242,8 +1256,7 @@ and statement_desc top cxt (s : J.statement_desc) : cxt =
               group cxt 1 (fun () ->
                   string cxt L.default;
                   string cxt L.colon;
-                  newline cxt;
-                  statements ~top:false cxt def))
+                  case_body cxt def))
   | Throw e ->
       (* let e =
         match e.expression_desc with

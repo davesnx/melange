@@ -289,11 +289,15 @@ let translate loc (prim_name : string) (args : J.expression list) : J.expression
               E.runtime_call ~module_name:Js_runtime_modules.array
                 ~fn_name:"dup" args)
       | _ -> assert false)
-  | "caml_format_float" | "caml_hexstring_of_float" | "caml_nativeint_format"
-  | "caml_int32_format" | "caml_float_of_string"
+  | "caml_format_int" | "caml_int32_format" | "caml_nativeint_format" -> (
+      match args with
+      | [ { expression_desc = Str "%d"; _ }; x ] ->
+          E.call (E.js_global "String") [ x ]
+            ~info:Js_call_info.builtin_runtime_call
+      | _ -> call Js_runtime_modules.format)
+  | "caml_format_float" | "caml_hexstring_of_float" | "caml_float_of_string"
   | "caml_int_of_string" (* what is the semantics?*) | "caml_int32_of_string"
-  | "caml_nativeint_of_string" | "caml_int64_format" | "caml_int64_of_string"
-  | "caml_format_int" ->
+  | "caml_nativeint_of_string" | "caml_int64_format" | "caml_int64_of_string" ->
       call Js_runtime_modules.format
   (*   "caml_alloc_dummy"; *)
   (* TODO:   "caml_alloc_dummy_float"; *)
