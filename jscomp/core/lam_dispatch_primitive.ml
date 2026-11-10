@@ -298,7 +298,9 @@ let translate loc (prim_name : string) (args : J.expression list) : J.expression
       | _ -> call Js_runtime_modules.format)
   | "caml_format_float" | "caml_hexstring_of_float" | "caml_float_of_string"
   | "caml_int_of_string" (* what is the semantics?*) | "caml_int32_of_string"
-  | "caml_nativeint_of_string" | "caml_int64_format" | "caml_int64_of_string" ->
+  | "caml_nativeint_of_string" | "caml_int64_format" | "caml_int64_of_string"
+  | "caml_printf_pad" | "caml_printf_iprec" | "caml_printf_float"
+  | "caml_printf_caml_string" | "caml_printf_caml_char" ->
       call Js_runtime_modules.format
   (*   "caml_alloc_dummy"; *)
   (* TODO:   "caml_alloc_dummy_float"; *)
