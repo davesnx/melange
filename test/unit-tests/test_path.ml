@@ -1,6 +1,6 @@
 let os_adapt s =
-  let regexp = Str.regexp "\\(/\\)" in
-  Str.global_replace regexp (String.escaped Filename.dir_sep) s
+  let regexp = Str.regexp "\\([^/]\\)/" in
+  Str.global_replace regexp ("\\1" ^ String.escaped Filename.dir_sep) s
 
 let test_linux_path () =
   let norm =
@@ -21,19 +21,20 @@ let test_linux_path () =
   in
   Alcotest.(check (array string))
     __LOC__ norm
-    [|
-      "/";
-      "/a/c../d/e/f";
-      "/a/d/e/f";
-      "/";
-      "/a/b/c/d";
-      "/a/b/c/d";
-      "/a";
-      "/a";
-      "/a.txt";
-      "/a.txt";
-      "/foo/bar/baz";
-    |];
+    (Array.map ~f:os_adapt
+       [|
+         "/";
+         "/a/c../d/e/f";
+         "/a/d/e/f";
+         "/";
+         "/a/b/c/d";
+         "/a/b/c/d";
+         "/a";
+         "/a";
+         "/a.txt";
+         "/a.txt";
+         "/foo/bar/baz";
+       |]);
   Alcotest.(check string)
     __LOC__
     (Paths.normalize_absolute_path
