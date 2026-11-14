@@ -76,6 +76,7 @@ let test_file_errors () =
           Io.write_filev_exn missing [ "contents" ]))
 
 let test_read_file_with_zero_reported_size () =
+  if Sys.win32 then Alcotest.skip ();
   let path = Filename.temp_file "melange-io" ".fifo" in
   Sys.remove path;
   Unix.mkfifo path 0o600;

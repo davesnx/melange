@@ -21,7 +21,6 @@ In this test case:
 
 Generated JS files are unmangled
 
-  $ tree --noreport _build/default/dist/node
-  _build/default/dist/node
-  |-- leaf.js
-  `-- other.js
+  $ ls _build/default/dist/node
+  leaf.js
+  other.js

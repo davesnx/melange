@@ -7,3 +7,15 @@
   %{bin:jq}
   %{bin:ocamlmerlin}
   %{lib:melange.belt:melange/belt.cmj}))
+
+(cram
+ (applies_to
+  deriving-abstract-one-field
+  editor-stdlib-gotodef
+  exn-cause
+  exn-cause-undefined
+  ppx-location-snippet
+  rec-module-eager
+  sys-argv)
+ (enabled_if
+  (<> %{os_type} Win32)))

@@ -30,11 +30,9 @@ Showcase library name namespacing in dune
 
 Generated JS files are unmangled
 
-  $ tree --noreport _build/default/dist/leaf
-  _build/default/dist/leaf
-  |-- leaf.js
-  `-- other.js
-  $ tree --noreport _build/default/dist/parent
-  _build/default/dist/parent
-  |-- m_a.js
-  `-- m_b.js
+  $ ls _build/default/dist/leaf
+  leaf.js
+  other.js
+  $ ls _build/default/dist/parent
+  m_a.js
+  m_b.js

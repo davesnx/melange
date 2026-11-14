@@ -18,10 +18,9 @@ In this case, we create a library that shadows the `Node` module.
 
 Generated JS files are unmangled
 
-  $ tree --noreport _build/default/dist/node
-  _build/default/dist/node
-  |-- node.js
-  `-- other.js
+  $ ls _build/default/dist/node
+  node.js
+  other.js
 
   $ node _build/default/dist/entry_module.js
   hello from shadowed Node module
